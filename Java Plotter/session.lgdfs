@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<comment>LiveGraph version 2.0.beta01. DataFileSettings.</comment>
+<entry key="ShowOnlyTailData">0</entry>
+<entry key="DataFile">C:\Users\JRizzly\Documents\GitHub\gdaxMMtracker\spread500.csv</entry>
+<entry key="UpdateFrequency">2000</entry>
+<entry key="DoNotCacheData">0</entry>
+</properties>
