@@ -36,15 +36,18 @@ IdTable = { #Will need to have this look up via python-bitshares later , Using T
 for i in range(0, len(json_data)):
     #print (json_data[i]['operation_history']['op_object']['is_maker'])
 
-    payAsset = json_data[i]['operation_history']['op_object']['pays']['asset_id']
-    payAssetAmount = json_data[i]['operation_history']['op_object']['pays']['amount']/100000
+    payAsset = IdTable[  json_data[i]['operation_history']['op_object']['pays']['asset_id']  ]  #Temp for understanding
+    payAssetAmount = json_data[i]['operation_history']['op_object']['pays']['amount']/10000
 
-    receiveAsset = json_data[i]['operation_history']['op_object']['receives']['asset_id']
-    receiveAssetAmount = json_data[i]['operation_history']['op_object']['receives']['amount']/10000
+    receiveAsset = IdTable[ json_data[i]['operation_history']['op_object']['receives']['asset_id'] ] #temp
+    receiveAssetAmount = json_data[i]['operation_history']['op_object']['receives']['amount']/100000
 
     print( "Paid Assest: " + str(payAsset) + " At this Amount: " + str(payAssetAmount) )
     print("Received Assest: " + str(receiveAsset) + " At this Amount: " + str(receiveAssetAmount) )
-    print( "Price: " + str( payAssetAmount / receiveAssetAmount  ) )
+    print( "Receive Asset Price: " + str( receiveAsset ) + " " +  str( receiveAssetAmount / payAssetAmount  )  )
+    print("Paid Asset Price: " + str(payAsset) + " " + str(payAssetAmount / receiveAssetAmount))
+
+
 
 
     #print (json_data[i]['operation_history']['op_object']['pays']['asset_id'] + " " + str(json_data[i]['operation_history']['op_object']['pays']['amount'])   )
