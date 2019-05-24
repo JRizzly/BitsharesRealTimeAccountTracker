@@ -22,7 +22,7 @@ EWS2: https://wrapper.elasticsearch.bitshares.ws/apidocs/#!/wrapper/get_account_
 Python-bitshares documentation: https://buildmedia.readthedocs.org/media/pdf/python-bitshares/latest/python-bitshares.pdf
 
 
-###Updates
+### Updates
 This is a work in progress, and I will update readme as appropriate. 
 
 
