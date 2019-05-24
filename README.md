@@ -26,3 +26,5 @@ Python-bitshares documentation: https://buildmedia.readthedocs.org/media/pdf/pyt
 This is a work in progress, and I will update readme as appropriate. 
 
 
+### Assumptions
+This assumes that you have an account dedicated to MM between the pairs indicated 
