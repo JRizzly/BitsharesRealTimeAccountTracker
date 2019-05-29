@@ -42,15 +42,58 @@ response = requests.get('https://wrapper.elasticsearch.bitshares.ws/get_account_
 ############################################# JSON #################################################
 
 
+baseAsset = '1.3.121'  #USD to change as an input
+QuoteAsset = '1.3.0'   #BTS to change as an input
 
+
+
+class FillEvent:
+
+    startBalancePayAsset = None
+    startBalanceReceiveAsset = None
+
+    def __init__(self, datee, receiveAssett, receiveAmountt, payAssett, payAmountt ):
+
+        self.date = datee
+
+        self.receiveAsset = receiveAssett
+        self.receiveAmount = receiveAmountt
+        self.payAsset = payAssett
+        self.payAmount = payAmountt
+
+        self.receiverAssetPrice = None #todo
+        self.payerAssetPrice = None #todo
+        self.receiverAssetPricePercent = None #todo
+        self.payerAssetPricePercent = None #todo
+
+        self.receiverAssetBalanceOverTime = None #todo
+        self.payAssetOverTime = None #todo
+
+        self.currentPayAssetAccountValueAppx = None #todo
+        self.currentReceiverAssetAccountValueAppx = None  # todo
+        self.currentPayAssetAccountValuePercent = None #todo
+        self.currentReceiverAssetValuePercent = None #todo
+
+        self.currentPayAssetProportion = None #todo
+        self.currentReceiverAssetProportion = None #todo
+
+    def csvBasicPrintOut(self):
+        pass #todo
+
+    
 
 json_data_fills = json.loads(response.text)
 #Reversing to match chronological
 json_data_fills.reverse()
 
 
+fillEventLog = []
+
+
 for i in range(0, len(json_data_fills)):
     #print (json_data_fills[i]['operation_history']['op_object']['is_maker']) #Todo feature add ability to see how many trades are maker
+
+    fillDate = json_data_fills[i]['block_data']['block_time']
 
     payAsset =   json_data_fills[i]['operation_history']['op_object']['pays']['asset_id']
     payAssetAmount = json_data_fills[i]['operation_history']['op_object']['pays']['amount'] / \
@@ -61,9 +104,13 @@ for i in range(0, len(json_data_fills)):
     receiveAssetAmount = json_data_fills[i]['operation_history']['op_object']['receives']['amount'] / \
                          10**Asset(  json_data_fills[i]['operation_history']['op_object']['receives']['asset_id'] )['precision']  #Thanks paasila
 
+    fillData = FillEvent(fillDate, receiveAsset , receiveAssetAmount , payAsset , payAssetAmount  )
+    fillEventLog.append(fillData)
+
+
     # Prints output in CSV form, I used to validate
-    #print(str(receiveAssetAmount) + "," + str(receiveAsset) , end=",")
-    #print( str(payAssetAmount) + "," + str(payAsset) )
+    print(fillDate + "," + str(receiveAssetAmount) + "," + str(receiveAsset) , end=",")
+    print( str(payAssetAmount) + "," + str(payAsset) )
 
     ''' # Good to print out for it to make sense but not needed
     print( "Paid Assest: " + str(payAsset) + " At this Amount: " + str(payAssetAmount) )
@@ -77,7 +124,7 @@ for i in range(0, len(json_data_fills)):
     #print("Paid Asset Price: " + str(payAsset) + " " + str(payAssetAmount / receiveAssetAmount))
 
 
-
+print (fillEventLog)
     
 
 
