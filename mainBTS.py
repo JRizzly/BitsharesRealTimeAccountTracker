@@ -49,24 +49,24 @@ QuoteAsset = '1.3.0'   #BTS to change as an input
 
 class FillEvent:
 
-    startBalancePayAsset = None
-    startBalanceReceiveAsset = None
+    currentBalanceBase = 17279.83
+    currentBalanceQuote = 0.00
 
-    def __init__(self, datee, receiveAssett, receiveAmountt, payAssett, payAmountt ):
+    def __init__(self, datee, receiveAssett, receiveAssetAmountt, payAssett, payAssetAmountt ):
 
         self.date = datee
 
         self.receiveAsset = receiveAssett
-        self.receiveAmount = receiveAmountt
+        self.receiveAssetAmount = receiveAssetAmountt
         self.payAsset = payAssett
-        self.payAmount = payAmountt
+        self.payAssetAmount = payAssetAmountt
 
-        self.receiverAssetPrice = None #todo
-        self.payerAssetPrice = None #todo
+        self.receiverAssetPrice = self.receiveAssetAmount / self.payAssetAmount
+        self.payerAssetPrice = self.payAssetAmount / self.receiveAssetAmount
         self.receiverAssetPricePercent = None #todo
         self.payerAssetPricePercent = None #todo
 
-        self.receiverAssetBalanceOverTime = None #todo
+        self.receiverAssetBalanceOverTime = self.getReceiverAssetBalanceOverTime()
         self.payAssetOverTime = None #todo
 
         self.currentPayAssetAccountValueAppx = None #todo
@@ -77,10 +77,28 @@ class FillEvent:
         self.currentPayAssetProportion = None #todo
         self.currentReceiverAssetProportion = None #todo
 
-    def csvBasicPrintOut(self):
-        pass #todo
 
-    
+    def getReceiverAssetBalanceOverTime(self):
+        if (self.receiveAsset == baseAsset):
+            return self.currentBalanceBase + self.receiveAssetAmount
+        if (self.receiveAsset == QuoteAsset):
+            return self.currentBalanceQuote + self.receiveAssetAmount
+        else :
+            print ("Error: in Get ReceiverAssetBalanceOverTime")
+            return 0.0
+
+
+    def csvBasicPrintOut(self):
+        print ( self.date + "," + str(self.receiveAssetAmount) + "," + Asset(str(self.receiveAsset))['symbol'] , end=",")
+        print (  str(self.payAssetAmount) + "," + Asset(str(self.payAsset))['symbol'] )
+
+    def csvFullPrintOut(self):
+        print ( self.date + "," + str(self.receiveAssetAmount) + "," + Asset(str(self.receiveAsset))['symbol'] , end=",")
+        print (  str(self.payAssetAmount) + "," + Asset(str(self.payAsset))['symbol'] , end="," )
+        print ( str( self.receiverAssetPrice )  + "," + str( self.payerAssetPrice), end=","  )
+        print ( str( self.receiverAssetBalanceOverTime ) + ","  )
+
+
 
 json_data_fills = json.loads(response.text)
 #Reversing to match chronological
@@ -109,8 +127,8 @@ for i in range(0, len(json_data_fills)):
 
 
     # Prints output in CSV form, I used to validate
-    print(fillDate + "," + str(receiveAssetAmount) + "," + str(receiveAsset) , end=",")
-    print( str(payAssetAmount) + "," + str(payAsset) )
+    #print(fillDate + "," + str(receiveAssetAmount) + "," + str(receiveAsset) , end=",")
+    #print( str(payAssetAmount) + "," + str(payAsset) )
 
     ''' # Good to print out for it to make sense but not needed
     print( "Paid Assest: " + str(payAsset) + " At this Amount: " + str(payAssetAmount) )
@@ -123,8 +141,9 @@ for i in range(0, len(json_data_fills)):
     #print( "Receive Asset Price: " + str( receiveAsset ) + " " +  str( receiveAssetAmount / payAssetAmount  )  )
     #print("Paid Asset Price: " + str(payAsset) + " " + str(payAssetAmount / receiveAssetAmount))
 
+for i in range(0, len(fillEventLog)):
+    fillEventLog[i].csvFullPrintOut()
 
-print (fillEventLog)
     
 
 
