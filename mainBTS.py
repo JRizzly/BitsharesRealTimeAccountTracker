@@ -31,7 +31,7 @@ headers = {
 params = (
     ('account_id', '1.2.1612456'),
     ('operation_type', '4'),
-    ('size', '99'),
+    ('size', '999'),
     ('to_date', 'now'),
     ('sort_by', '-block_data.block_time'),
     ('type', 'data'),
@@ -52,21 +52,64 @@ class FillEvent:
     currentBalanceBase = 17279.83
     currentBalanceQuote = 0.00
 
+    currentBaseValueCalc = 0.0
+    currentQuoteValueCalc = 0.0
+
+    currentSequence = 0
+
+    #startBasePrice = 0.0
+    #startQuotePrice = 0.0
+
+
     def __init__(self, datee, receiveAssett, receiveAssetAmountt, payAssett, payAssetAmountt ):
 
+
+
+
+
         self.date = datee
+
+        self.currentSequence += 1
 
         self.receiveAsset = receiveAssett
         self.receiveAssetAmount = receiveAssetAmountt
         self.payAsset = payAssett
         self.payAssetAmount = payAssetAmountt
 
-        self.receiverAssetPrice = self.receiveAssetAmount / self.payAssetAmount
-        self.payerAssetPrice = self.payAssetAmount / self.receiveAssetAmount
-        self.receiverAssetPricePercent = None #todo
-        self.payerAssetPricePercent = None #todo
+        if  receiveAssett == baseAsset : #check to see if base or quote asset is on recieving end of fill
 
-        self.receiverAssetBalanceOverTime = self.getReceiverAssetBalanceOverTime()
+            self.baseAssetPrice = self.receiveAssetAmount / self.payAssetAmount
+            self.quoteAssetPrice = self.payAssetAmount / self.receiveAssetAmount
+
+            #self.BaseAssetPricePercent = (self.baseAssetPrice / self.startBasePrice) * 100.0
+            #self.QuoteAssetPricePercent = (self.quoteAssetPrice / self.startQuotePrice) * 100.0
+
+            self.currentBalanceBase = self.currentBalanceBase + self.receiveAssetAmount
+            self.currentBalanceQuote = self.currentBalanceQuote - self.payAssetAmount
+
+
+
+
+
+        else:
+
+
+
+            self.quoteAssetPrice = self.receiveAssetAmount / self.payAssetAmount
+            self.baseAssetPrice = self.payAssetAmount / self.receiveAssetAmount
+
+            #self.QuoteAssetPricePercent = (self.quoteAssetPrice / self.startBasePrice) * 100.0
+            #self.BaseAssetPricePercent = (self.baseAssetPrice / self.startQuotePrice) * 100.0
+
+            self.currentBalanceQuote = self.currentBalanceQuote + self.receiveAssetAmount
+            self.currentBalanceBase = self.currentBalanceBase - self.payAssetAmount
+
+
+
+
+
+
+        #self.receiverAssetBalanceOverTime = self.getReceiverAssetBalanceOverTime()
         self.payAssetOverTime = None #todo
 
         self.currentPayAssetAccountValueAppx = None #todo
@@ -78,6 +121,9 @@ class FillEvent:
         self.currentReceiverAssetProportion = None #todo
 
 
+
+
+    ''' 
     def getReceiverAssetBalanceOverTime(self):
         if (self.receiveAsset == baseAsset):
             return self.currentBalanceBase + self.receiveAssetAmount
@@ -86,6 +132,8 @@ class FillEvent:
         else :
             print ("Error: in Get ReceiverAssetBalanceOverTime")
             return 0.0
+            
+    '''
 
 
     def csvBasicPrintOut(self):
@@ -98,6 +146,12 @@ class FillEvent:
         print ( str( self.receiverAssetPrice )  + "," + str( self.payerAssetPrice), end=","  )
         print ( str( self.receiverAssetBalanceOverTime ) + ","  )
 
+    def csvFullPrintOut2(self):
+        print (  str(self.currentBalanceBase) + "," + Asset(str(baseAsset))['symbol'] , end=",")
+        print (  str(self.currentBalanceQuote) + "," + Asset(str(QuoteAsset))['symbol'] , end="," )
+        print ( str( self.baseAssetPrice )  + "," + str( self.quoteAssetPrice), end=","  )
+        print ()
+        #print ( str( self.base ) + ","  )
 
 
 json_data_fills = json.loads(response.text)
@@ -106,6 +160,8 @@ json_data_fills.reverse()
 
 
 fillEventLog = []
+setBaseAndQuoteStartPrice = False
+
 
 
 for i in range(0, len(json_data_fills)):
@@ -125,6 +181,10 @@ for i in range(0, len(json_data_fills)):
     fillData = FillEvent(fillDate, receiveAsset , receiveAssetAmount , payAsset , payAssetAmount  )
     fillEventLog.append(fillData)
 
+    fillData.csvFullPrintOut2()
+
+
+
 
     # Prints output in CSV form, I used to validate
     #print(fillDate + "," + str(receiveAssetAmount) + "," + str(receiveAsset) , end=",")
@@ -141,9 +201,10 @@ for i in range(0, len(json_data_fills)):
     #print( "Receive Asset Price: " + str( receiveAsset ) + " " +  str( receiveAssetAmount / payAssetAmount  )  )
     #print("Paid Asset Price: " + str(payAsset) + " " + str(payAssetAmount / receiveAssetAmount))
 
+''' 
 for i in range(0, len(fillEventLog)):
     fillEventLog[i].csvFullPrintOut()
-
+'''
     
 
 
