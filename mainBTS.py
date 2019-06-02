@@ -31,7 +31,7 @@ headers = {
 params = (
     ('account_id', '1.2.1612456'),
     ('operation_type', '4'),
-    ('size', '999'),
+    ('size', '3000'),
     ('to_date', 'now'),
     ('sort_by', '-block_data.block_time'),
     ('type', 'data'),
@@ -42,29 +42,31 @@ response = requests.get('https://wrapper.elasticsearch.bitshares.ws/get_account_
 ############################################# JSON #################################################
 
 
-baseAsset = '1.3.121'  #USD to change as an input
-QuoteAsset = '1.3.0'   #BTS to change as an input
+QuoteAsset = '1.3.121'  #USD to change as an input
+BaseAsset = '1.3.0'   #BTS to change as an input
 
+BaseAmountStart = 17279.83
+QuoteAmountStart = 0.0
 
 
 class FillEvent:
 
-    currentBalanceBase = 17279.83
-    currentBalanceQuote = 0.00
-
-    currentBaseValueCalc = 0.0
-    currentQuoteValueCalc = 0.0
-
-    currentSequence = 0
-
-    #startBasePrice = 0.0
-    #startQuotePrice = 0.0
-
 
     def __init__(self, datee, receiveAssett, receiveAssetAmountt, payAssett, payAssetAmountt ):
 
+        global BaseAmountStart
+        global QuoteAmountStart
+        global QuoteAsset
+        global BaseAsset
 
 
+        self.currentBalanceBase = BaseAmountStart
+        self.currentBalanceQuote = QuoteAmountStart
+
+        self.currentBaseValueCalc = 0.0
+        self.currentQuoteValueCalc = 0.0
+
+        self.currentSequence = 0
 
 
         self.date = datee
@@ -76,7 +78,7 @@ class FillEvent:
         self.payAsset = payAssett
         self.payAssetAmount = payAssetAmountt
 
-        if  receiveAssett == baseAsset : #check to see if base or quote asset is on recieving end of fill
+        if  self.receiveAsset == BaseAsset and self.payAsset == QuoteAsset: #check to see if base or quote asset is on recieving end of fill
 
             self.baseAssetPrice = self.receiveAssetAmount / self.payAssetAmount
             self.quoteAssetPrice = self.payAssetAmount / self.receiveAssetAmount
@@ -84,15 +86,16 @@ class FillEvent:
             #self.BaseAssetPricePercent = (self.baseAssetPrice / self.startBasePrice) * 100.0
             #self.QuoteAssetPricePercent = (self.quoteAssetPrice / self.startQuotePrice) * 100.0
 
-            self.currentBalanceBase = self.currentBalanceBase + self.receiveAssetAmount
-            self.currentBalanceQuote = self.currentBalanceQuote - self.payAssetAmount
+            self.currentBalanceBase += self.receiveAssetAmount
+            BaseAmountStart = self.currentBalanceBase
+            self.currentBalanceQuote -= self.payAssetAmount
+            QuoteAmountStart = self.currentBalanceQuote
 
 
 
 
 
-        else:
-
+        if self.payAsset == BaseAsset :
 
 
             self.quoteAssetPrice = self.receiveAssetAmount / self.payAssetAmount
@@ -101,9 +104,10 @@ class FillEvent:
             #self.QuoteAssetPricePercent = (self.quoteAssetPrice / self.startBasePrice) * 100.0
             #self.BaseAssetPricePercent = (self.baseAssetPrice / self.startQuotePrice) * 100.0
 
-            self.currentBalanceQuote = self.currentBalanceQuote + self.receiveAssetAmount
-            self.currentBalanceBase = self.currentBalanceBase - self.payAssetAmount
-
+            self.currentBalanceQuote += self.receiveAssetAmount
+            QuoteAmountStart = self.currentBalanceQuote
+            self.currentBalanceBase -= self.payAssetAmount
+            BaseAmountStart = self.currentBalanceBase
 
 
 
@@ -147,7 +151,7 @@ class FillEvent:
         print ( str( self.receiverAssetBalanceOverTime ) + ","  )
 
     def csvFullPrintOut2(self):
-        print (  str(self.currentBalanceBase) + "," + Asset(str(baseAsset))['symbol'] , end=",")
+        print (  str(self.currentBalanceBase) + "," + Asset(str(BaseAsset))['symbol'] , end=",")
         print (  str(self.currentBalanceQuote) + "," + Asset(str(QuoteAsset))['symbol'] , end="," )
         print ( str( self.baseAssetPrice )  + "," + str( self.quoteAssetPrice), end=","  )
         print ()
@@ -178,10 +182,11 @@ for i in range(0, len(json_data_fills)):
     receiveAssetAmount = json_data_fills[i]['operation_history']['op_object']['receives']['amount'] / \
                          10**Asset(  json_data_fills[i]['operation_history']['op_object']['receives']['asset_id'] )['precision']  #Thanks paasila
 
+    if ( ) # Need to handle case where non-pair fills happen
     fillData = FillEvent(fillDate, receiveAsset , receiveAssetAmount , payAsset , payAssetAmount  )
     fillEventLog.append(fillData)
 
-    fillData.csvFullPrintOut2()
+    #fillData.csvFullPrintOut2()
 
 
 
@@ -201,10 +206,10 @@ for i in range(0, len(json_data_fills)):
     #print( "Receive Asset Price: " + str( receiveAsset ) + " " +  str( receiveAssetAmount / payAssetAmount  )  )
     #print("Paid Asset Price: " + str(payAsset) + " " + str(payAssetAmount / receiveAssetAmount))
 
-''' 
+
 for i in range(0, len(fillEventLog)):
-    fillEventLog[i].csvFullPrintOut()
-'''
+    fillEventLog[i].csvFullPrintOut2()
+
     
 
 
