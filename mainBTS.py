@@ -48,30 +48,31 @@ BaseAsset = '1.3.0'   #BTS to change as an input
 BaseAmountStart = 17279.83
 QuoteAmountStart = 0.0
 
+baseAccountValueCalcStart = None
+quoteAccountValueCalcStart = None
+setStart = False
 
 class FillEvent:
 
 
-    def __init__(self, datee, receiveAssett, receiveAssetAmountt, payAssett, payAssetAmountt ):
+
+
+    def __init__(self, datee, receiveAssett, receiveAssetAmountt, payAssett, payAssetAmountt, seq ):
 
         global BaseAmountStart
         global QuoteAmountStart
         global QuoteAsset
         global BaseAsset
-
+        global baseAccountValueCalcStart
+        global quoteAccountValueCalcStart
+        global setStart
 
         self.currentBalanceBase = BaseAmountStart
         self.currentBalanceQuote = QuoteAmountStart
 
-        self.currentBaseValueCalc = 0.0
-        self.currentQuoteValueCalc = 0.0
-
-        self.currentSequence = 0
-
+        self.currentSequence = seq
 
         self.date = datee
-
-        self.currentSequence += 1
 
         self.receiveAsset = receiveAssett
         self.receiveAssetAmount = receiveAssetAmountt
@@ -79,6 +80,8 @@ class FillEvent:
         self.payAssetAmount = payAssetAmountt
 
         if  self.receiveAsset == BaseAsset and self.payAsset == QuoteAsset: #check to see if base or quote asset is on recieving end of fill
+
+            self.currentSequence += 1
 
             self.baseAssetPrice = self.receiveAssetAmount / self.payAssetAmount
             self.quoteAssetPrice = self.payAssetAmount / self.receiveAssetAmount
@@ -91,11 +94,21 @@ class FillEvent:
             self.currentBalanceQuote -= self.payAssetAmount
             QuoteAmountStart = self.currentBalanceQuote
 
+            self.baseAccountValueCalc = self.currentBalanceBase + (self.currentBalanceQuote * self.baseAssetPrice)
+            self.quoteAccountValueCalc = self.currentBalanceQuote + (self.currentBalanceBase * self.quoteAssetPrice)
+
+            if ( setStart  == False ):
+                setStart = True
+                baseAccountValueCalcStart = self.baseAccountValueCalc
+                quoteAccountValueCalcStart = self.quoteAccountValueCalc
+
+            self.baseAccountValueCalcPercent = ( self.baseAccountValueCalc / baseAccountValueCalcStart ) * 100.00
+            self.quoteAccountValueCalcPercent = (self.quoteAccountValueCalc / quoteAccountValueCalcStart) * 100.00
 
 
+        if self.payAsset == BaseAsset and self.receiveAsset == QuoteAsset:
 
-
-        if self.payAsset == BaseAsset :
+            self.currentSequence += 1
 
 
             self.quoteAssetPrice = self.receiveAssetAmount / self.payAssetAmount
@@ -111,33 +124,17 @@ class FillEvent:
 
 
 
+            self.baseAccountValueCalc = self.currentBalanceBase + (self.currentBalanceQuote * self.baseAssetPrice)
+            self.quoteAccountValueCalc = self.currentBalanceQuote + (self.currentBalanceBase * self.quoteAssetPrice)
 
+            if ( setStart  == False ):
+                setStart = True
+                baseAccountValueCalcStart = self.baseAccountValueCalc
+                quoteAccountValueCalcStart = self.quoteAccountValueCalc
 
-        #self.receiverAssetBalanceOverTime = self.getReceiverAssetBalanceOverTime()
-        self.payAssetOverTime = None #todo
+            self.baseAccountValueCalcPercent = ( self.baseAccountValueCalc / baseAccountValueCalcStart ) * 100.00
+            self.quoteAccountValueCalcPercent = (self.quoteAccountValueCalc / quoteAccountValueCalcStart) * 100.00
 
-        self.currentPayAssetAccountValueAppx = None #todo
-        self.currentReceiverAssetAccountValueAppx = None  # todo
-        self.currentPayAssetAccountValuePercent = None #todo
-        self.currentReceiverAssetValuePercent = None #todo
-
-        self.currentPayAssetProportion = None #todo
-        self.currentReceiverAssetProportion = None #todo
-
-
-
-
-    ''' 
-    def getReceiverAssetBalanceOverTime(self):
-        if (self.receiveAsset == baseAsset):
-            return self.currentBalanceBase + self.receiveAssetAmount
-        if (self.receiveAsset == QuoteAsset):
-            return self.currentBalanceQuote + self.receiveAssetAmount
-        else :
-            print ("Error: in Get ReceiverAssetBalanceOverTime")
-            return 0.0
-            
-    '''
 
 
     def csvBasicPrintOut(self):
@@ -156,6 +153,17 @@ class FillEvent:
         print ( str( self.baseAssetPrice )  + "," + str( self.quoteAssetPrice), end=","  )
         print ()
         #print ( str( self.base ) + ","  )
+
+    def csvPairPrintOut(self):
+        if ( (self.receiveAsset == BaseAsset or self.receiveAsset == QuoteAsset ) and ( self.payAsset == BaseAsset or self.payAsset ==  QuoteAsset  )  ):
+            print (  str(self.currentBalanceBase) + "," + Asset(str(BaseAsset))['symbol'] , end=",")
+            print (  str(self.currentBalanceQuote) + "," + Asset(str(QuoteAsset))['symbol'] , end="," )
+            print ( str( self.baseAssetPrice )  + "," + str( self.quoteAssetPrice), end=","  )
+            print ( str( self.baseAccountValueCalc ) + "," + str( self.quoteAccountValueCalc), end="," )
+            print(str(self.baseAccountValueCalcPercent) + "," + str(self.quoteAccountValueCalcPercent), end=",")
+            print ()
+            #print ( str( self.base ) + ","  )
+
 
 
 json_data_fills = json.loads(response.text)
@@ -182,8 +190,8 @@ for i in range(0, len(json_data_fills)):
     receiveAssetAmount = json_data_fills[i]['operation_history']['op_object']['receives']['amount'] / \
                          10**Asset(  json_data_fills[i]['operation_history']['op_object']['receives']['asset_id'] )['precision']  #Thanks paasila
 
-    if ( ) # Need to handle case where non-pair fills happen
-    fillData = FillEvent(fillDate, receiveAsset , receiveAssetAmount , payAsset , payAssetAmount  )
+
+    fillData = FillEvent(fillDate, receiveAsset , receiveAssetAmount , payAsset , payAssetAmount, i  )
     fillEventLog.append(fillData)
 
     #fillData.csvFullPrintOut2()
@@ -208,7 +216,7 @@ for i in range(0, len(json_data_fills)):
 
 
 for i in range(0, len(fillEventLog)):
-    fillEventLog[i].csvFullPrintOut2()
+    fillEventLog[i].csvPairPrintOut()
 
     
 
